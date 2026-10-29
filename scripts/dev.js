@@ -4,14 +4,7 @@ import { spawn } from 'node:child_process';
 
 const demo = process.argv[2] === 'demo';
 if (demo) process.env.PLAID_ENV = 'demo';
-else {
-  try { process.loadEnvFile('.env'); } catch { /* no .env: the check below says what to do */ }
-  // In watch mode a server that can't start waits for edits instead of exiting, so check the keys before starting.
-  if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
-    console.error('Moneta needs Plaid keys: cp .env.example .env, then fill in PLAID_CLIENT_ID and PLAID_SECRET.\nNo keys yet? Try it with sample data: npm run dev:demo');
-    process.exit(1);
-  }
-}
+else try { process.loadEnvFile('.env'); } catch { /* no .env: manual accounts only until Plaid keys are added */ }
 // --watch follows server.js and the modules it imports, nothing else (not the database files next to them).
 const server = spawn(process.execPath, ['--watch', 'server.js'], { stdio: 'inherit', env: process.env });
 const web = spawn('npm', ['--prefix', 'web', 'run', 'dev'], { stdio: 'inherit', shell: process.platform === 'win32' });

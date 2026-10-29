@@ -12,7 +12,8 @@ If `NOTES.md` exists, read it: it's the owner's private log (state, decisions, w
 ## Run
 
 ```bash
-npm start              # server on http://localhost:3000 (serves web/dist + /api), env from .env
+npm start              # server on http://localhost:3000 (serves web/dist + /api), env from .env; prestart runs
+                       # scripts/setup.js (installs/builds the UI when missing or stale). No Plaid keys = manual accounts only
 npm run build          # build the React UI into web/dist (needed after any web/ change)
 npm run dev            # server (restarts on code changes) + Vite on :5173, both at once (dev:demo: sample data)
 node ledger.js         # self-check for the merge / rules / recurrings / schedules logic

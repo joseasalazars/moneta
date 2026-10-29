@@ -33,10 +33,10 @@ function Kpi({ title, value, hint }: { title: string; value: string; hint?: Reac
 // First run: nothing linked, nothing typed in. Say how to start instead of a dashboard full of $0.
 function Welcome() {
   const steps: [string, React.ReactNode][] = [
-    ['Connect a bank', <>Use <span className="font-medium">Connect account</span> at the top right. With Plaid sandbox keys, pick any test bank and sign in with <code>user_good</code> / <code>pass_good</code>.</>],
+    ['Connect a bank', <>Use <span className="font-medium">Connect account</span> at the top right. It needs Plaid keys in <code>.env</code> (free sandbox keys at dashboard.plaid.com); with sandbox keys, pick any test bank and sign in with <code>user_good</code> / <code>pass_good</code>.</>],
     ['Add an account by hand', <>For anything Plaid can't reach (cash, a store card, an HSA, Bitcoin or gold): <a className="underline" href="#accounts">Accounts → Add manual account</a>.</>],
     ['Coming from Copilot Money?', <>Import your Copilot CSV export to keep your history, categories and tags. The README explains how.</>],
-    ['Just looking around?', <>Stop the server and run <code>npm run demo</code> to explore with a made-up person's data.</>],
+    ['Just looking around?', <>Run <code>npm run demo</code> instead to explore with a made-up person's data.</>],
   ]
   return (
     <Card className="mx-auto w-full max-w-2xl">

@@ -3,13 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prestart": "node scripts/setup.js",
     "start": "node --env-file-if-exists=.env server.js",
     "build": "npm --prefix web run build",
+    "predev": "node scripts/setup.js deps",
     "dev": "node scripts/dev.js",
     "smoke": "node --env-file-if-exists=.env server.js smoke",
     "check": "node check-merge.js",
     "import:copilot": "sqlite3 ledger-production.db < import-copilot.sql",
-    "demo": "PLAID_ENV=demo node server.js",
+    "predemo": "node scripts/setup.js",
+    "demo": "node server.js --demo",
+    "predev:demo": "node scripts/setup.js deps",
     "dev:demo": "node scripts/dev.js demo"
   }
 }

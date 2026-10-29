@@ -9,13 +9,15 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { ALGS, b64url, checkCeremony, verifyAssertion } from './auth.js';
 import { buildAlerts, buildHealth, buildRecurrings, dueOccurrences, loadLedger } from './ledger.js';
 
-const { PLAID_CLIENT_ID, PLAID_SECRET, PLAID_ENV = 'sandbox', PORT = '3000' } = process.env;
+const { PLAID_CLIENT_ID, PLAID_SECRET, PORT = '3000' } = process.env;
+// `node server.js --demo` (npm run demo) works on every OS, unlike setting PLAID_ENV inline.
+const PLAID_ENV = process.argv.includes('--demo') ? 'demo' : process.env.PLAID_ENV || 'sandbox';
 // PLAID_ENV=demo (npm run demo): no Plaid keys, no banks, a database filled with made-up data (demo.js).
 const demo = PLAID_ENV === 'demo';
-if (!demo && (!PLAID_CLIENT_ID || !PLAID_SECRET)) {
-  console.error('Moneta needs Plaid keys: cp .env.example .env, then fill in PLAID_CLIENT_ID and PLAID_SECRET.\nNo keys yet? Try it with sample data: npm run demo');
-  process.exit(1);
-}
+// Without Plaid keys Moneta still runs: manual accounts, transactions, budgets and everything else; only connecting
+// and syncing banks needs the keys.
+const plaidKeys = !!(PLAID_CLIENT_ID && PLAID_SECRET);
+if (!demo && !plaidKeys) console.log('No Plaid keys in .env: running with manual accounts only. Add keys to connect banks (see README).');
 
 const smoke = process.argv[2] === 'smoke';
 // ponytail: access_token stored in plaintext in a gitignored local file; encrypt (keychain) if this ever leaves the laptop
@@ -219,6 +221,7 @@ const lastPrice = (asset) => db.prepare('SELECT price FROM prices WHERE asset = 
 // Plaid is plain JSON over HTTPS; every request carries the secret, so never log bodies.
 async function plaid(path, body = {}) {
   if (demo) throw Object.assign(new Error('This is the demo: connecting banks needs your own Plaid keys in .env'), { status: 400 });
+  if (!plaidKeys) throw Object.assign(new Error('Connecting banks needs Plaid keys: copy .env.example to .env, add PLAID_CLIENT_ID and PLAID_SECRET (free sandbox keys at dashboard.plaid.com), then restart. Manual accounts work without them.'), { status: 400 });
   const res = await fetch(`https://${PLAID_ENV}.plaid.com${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

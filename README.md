@@ -29,18 +29,21 @@ nowhere else: no account, no cloud, no tracking. Think Copilot Money or Monarch,
 | ![Investments](docs/screenshots/investments.png) | ![Bills calendar](docs/screenshots/bills-calendar.png) |
 | ![Categories](docs/screenshots/categories.png) | ![Dark mode](docs/screenshots/dashboard-dark.png) |
 
-## Try it in a minute (no bank needed)
+## Get started
 
 Requires [Node.js](https://nodejs.org) 24 or newer (it uses the built-in `node:sqlite`).
 
 ```bash
-git clone <this repo> moneta && cd moneta
-npm --prefix web install && npm run build   # build the web UI once
-npm run demo                                 # http://localhost:3000
+git clone <this repo's URL> moneta && cd moneta   # the green Code button on GitHub has it
+npm start                                          # then open http://localhost:3000
 ```
 
-The demo runs on its own database (`ledger-demo.db`) filled with 14 months of a made-up person's money, so you can
-click through everything. Delete that file to start the demo over.
+That's it: the first run installs and builds the web UI by itself (about a minute), later runs start right away, and
+after a `git pull` it rebuilds what changed. Without Plaid keys Moneta works with accounts you add by hand; add keys
+(below) to connect banks.
+
+**Just want to look around?** `npm run demo` opens it with 14 months of a made-up person's money instead, on its own
+database (`ledger-demo.db`; delete it to start the demo over).
 
 ## Use it with your own accounts
 
@@ -49,7 +52,8 @@ click through everything. Delete that file to start the demo over.
    ("Items") **for good**, and removing one doesn't give the slot back, so link each bank once.
 2. **Configure.** `cp .env.example .env` and fill in `PLAID_CLIENT_ID`, `PLAID_SECRET` and `PLAID_ENV` (`sandbox` or
    `production`). Each environment gets its own database file, so test data never mixes with real data.
-3. **Run.** `npm start`, open http://localhost:3000 (use `localhost`, not `127.0.0.1`), and click **Connect account**.
+3. **Run.** `npm start` (restart it after changing `.env`), open http://localhost:3000 (use `localhost`, not
+   `127.0.0.1`), and click **Connect account**.
    With sandbox keys, pick any test bank and sign in with `user_good` / `pass_good`.
 4. **Make it yours.** Set budgets on the Categories page, goals on Goals, and rules from any transaction or on the
    Review page. Settings holds your categories, tags and where idle cash should go. Create a passkey when it asks.
