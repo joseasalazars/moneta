@@ -87,6 +87,17 @@ node auth.js                # self-check of the passkey (WebAuthn) verification
 - `web/` is the UI: Vite, React, TypeScript, Tailwind and shadcn/ui.
 - `CLAUDE.md` describes how everything fits together, for people and for coding agents.
 
+## Contributing
+
+Issues and pull requests are welcome: bug reports, ideas, a bank that behaves oddly through Plaid, or a fix.
+
+- **Never post real financial data** in an issue or pull request: no transactions, balances, account numbers, screenshots
+  of your own accounts, or anything from your `.env`. Reproduce problems with `npm run demo`, or replace the numbers and
+  names with made-up ones.
+- Keep the server free of dependencies (UI packages go in `web/`), and run `node ledger.js` and `node auth.js` before
+  sending a change. `CLAUDE.md` explains how the pieces fit together.
+- This is a side project shared as-is: replies and reviews may take a while.
+
 ## License
 
 [MIT](LICENSE). This is not financial advice, and it comes with no warranty: check the numbers that matter.
