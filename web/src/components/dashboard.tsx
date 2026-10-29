@@ -30,8 +30,34 @@ function Kpi({ title, value, hint }: { title: string; value: string; hint?: Reac
   )
 }
 
+// First run: nothing linked, nothing typed in. Say how to start instead of a dashboard full of $0.
+function Welcome() {
+  const steps: [string, React.ReactNode][] = [
+    ['Connect a bank', <>Use <span className="font-medium">Connect account</span> at the top right. With Plaid sandbox keys, pick any test bank and sign in with <code>user_good</code> / <code>pass_good</code>.</>],
+    ['Add an account by hand', <>For anything Plaid can't reach (cash, a store card, an HSA, Bitcoin or gold): <a className="underline" href="#accounts">Accounts → Add manual account</a>.</>],
+    ['Coming from Copilot Money?', <>Import your Copilot CSV export to keep your history, categories and tags. The README explains how.</>],
+    ['Just looking around?', <>Stop the server and run <code>npm run demo</code> to explore with a made-up person's data.</>],
+  ]
+  return (
+    <Card className="mx-auto w-full max-w-2xl">
+      <CardHeader>
+        <CardTitle className="text-xl">Welcome to Moneta</CardTitle>
+        <CardDescription>Everything stays on this computer. Start with any of these:</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        {steps.map(([title, text], i) => (
+          <div key={title} className="flex gap-3">
+            <span className="bg-muted grid size-6 shrink-0 place-items-center rounded-full text-xs font-medium">{i + 1}</span>
+            <div className="grid gap-0.5 text-sm"><span className="font-medium">{title}</span><span className="text-muted-foreground">{text}</span></div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
+
 export function Dashboard({ month }: { month: string }) {
-  const { ledger, recurrings, networth } = useData()
+  const { ledger, recurrings, networth, accounts } = useData()
   const rows = ledger?.rows ?? []
   const prev = prevMonth(month)
   const isCurrent = month === thisMonth()
@@ -96,6 +122,8 @@ export function Dashboard({ month }: { month: string }) {
   const upcoming = recurrings.filter((r) => r.active && r.lastAmount > 0 && r.nextDate >= todayISO() && r.nextDate <= soon)
     .sort((a, b) => a.nextDate.localeCompare(b.nextDate))
   const toReview = rows.filter((t) => !t.reviewed).length
+
+  if (!accounts.length && !rows.length) return <Welcome />
 
   const chartConfig = {
     current: { label: monthLabel(month), color: 'var(--chart-1)' },

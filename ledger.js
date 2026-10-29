@@ -478,6 +478,7 @@ export function buildHealth({ rows, budget, saveTarget, cash, checking, cards = 
   const spend = rows.filter((t) => t.type === 'regular' && !t.excluded);
   const total = (list, m) => list.filter((t) => (m ? t.date.startsWith(m) : months.includes(t.date.slice(0, 7)))).reduce((a, t) => a + t.amount, 0);
   const income = -total(rows.filter((t) => t.type === 'income')) / 3;
+  if (income <= 0) return []; // no income in the last three months yet: too little data to judge anything
   const spent = total(spend) / 3;
   const of = (cats) => total(spend.filter((t) => cats.includes(t.category))) / 3;
   const [last] = months;
@@ -685,5 +686,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const renamedTags = buildLedger({ plaid: [], copilot: [], tagRenames: { Freelance: 'Business', Old: '' }, manual: [
     { id: 31, date: '2026-01-01', name: 'Hosting', amount: 9, account: 'Cash', category: 'Work Expenses', type: 'regular', tags: '["Freelance","Business","Old"]' }] }).rows[0];
   assert.deepEqual(renamedTags.tags, ['Business'], 'merge Freelance into Business, delete Old');
+  assert.deepEqual(buildHealth({ rows: [], budget: 0, saveTarget: 0, cash: 0, checking: 0, today: '2026-10-29' }), [], 'a new install has no checks yet');
   console.log('ledger self-check ok');
 }

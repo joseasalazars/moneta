@@ -50,6 +50,7 @@ click through everything. Delete that file to start the demo over.
 2. **Configure.** `cp .env.example .env` and fill in `PLAID_CLIENT_ID`, `PLAID_SECRET` and `PLAID_ENV` (`sandbox` or
    `production`). Each environment gets its own database file, so test data never mixes with real data.
 3. **Run.** `npm start`, open http://localhost:3000 (use `localhost`, not `127.0.0.1`), and click **Connect account**.
+   With sandbox keys, pick any test bank and sign in with `user_good` / `pass_good`.
 4. **Make it yours.** Set budgets on the Categories page, goals on Goals, and rules from any transaction or on the
    Review page. Settings holds your categories, tags and where idle cash should go. Turn on Touch ID when it asks.
 

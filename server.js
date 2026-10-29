@@ -12,7 +12,10 @@ import { buildAlerts, buildHealth, buildRecurrings, dueOccurrences, loadLedger }
 const { PLAID_CLIENT_ID, PLAID_SECRET, PLAID_ENV = 'sandbox', PORT = '3000' } = process.env;
 // PLAID_ENV=demo (npm run demo): no Plaid keys, no banks, a database filled with made-up data (demo.js).
 const demo = PLAID_ENV === 'demo';
-if (!demo && (!PLAID_CLIENT_ID || !PLAID_SECRET)) throw new Error('Set PLAID_CLIENT_ID and PLAID_SECRET in .env (or try npm run demo)');
+if (!demo && (!PLAID_CLIENT_ID || !PLAID_SECRET)) {
+  console.error('Moneta needs Plaid keys: cp .env.example .env, then fill in PLAID_CLIENT_ID and PLAID_SECRET.\nNo keys yet? Try it with sample data: npm run demo');
+  process.exit(1);
+}
 
 const smoke = process.argv[2] === 'smoke';
 // ponytail: access_token stored in plaintext in a gitignored local file; encrypt (keychain) if this ever leaves the laptop
@@ -222,6 +225,9 @@ async function plaid(path, body = {}) {
     body: JSON.stringify({ client_id: PLAID_CLIENT_ID, secret: PLAID_SECRET, ...body }),
   });
   const data = await res.json();
+  if (data.error_code === 'INVALID_API_KEYS') {
+    throw Object.assign(new Error(`Plaid didn't accept your keys. Check PLAID_CLIENT_ID and PLAID_SECRET in .env, and that PLAID_ENV (${PLAID_ENV}) is the environment those keys are for, then restart.`), { code: data.error_code, status: 400 });
+  }
   if (!res.ok) throw Object.assign(new Error(`${path}: ${data.error_code} ${data.error_message}`), { code: data.error_code });
   return data;
 }
