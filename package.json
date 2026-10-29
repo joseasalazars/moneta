@@ -5,10 +5,11 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "build": "npm --prefix web run build",
-    "dev": "npm --prefix web run dev",
+    "dev": "node scripts/dev.js",
     "smoke": "node --env-file-if-exists=.env server.js smoke",
     "check": "node check-merge.js",
     "import:copilot": "sqlite3 ledger-production.db < import-copilot.sql",
-    "demo": "PLAID_ENV=demo node server.js"
+    "demo": "PLAID_ENV=demo node server.js",
+    "dev:demo": "node scripts/dev.js demo"
   }
 }

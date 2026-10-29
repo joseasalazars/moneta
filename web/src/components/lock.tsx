@@ -155,9 +155,9 @@ export function LockGate({ children }: { children: React.ReactNode }) {
             <div className="bg-muted mb-2 grid size-12 place-items-center rounded-full"><ServerOffIcon className="size-6" aria-hidden /></div>
             <CardTitle>Can't reach the Moneta server</CardTitle>
             <CardDescription>
-              This page is up, but the server behind it isn't running. In the moneta folder, run <code>npm start</code> (or{' '}
-              <code>npm run demo</code> to try it with sample data), then try again. Working on the code with <code>npm run dev</code>?
-              Keep one of those running in another terminal too.
+              This page is up, but the server behind it isn't running (or stopped). In the moneta folder, run{' '}
+              <code>npm start</code>, or <code>npm run demo</code> to try it with sample data, then try again. Check that
+              terminal for an error message.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid"><Button autoFocus onClick={() => check()}>Try again</Button></CardContent>

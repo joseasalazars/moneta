@@ -14,7 +14,7 @@ If `NOTES.md` exists, read it: it's the owner's private log (state, decisions, w
 ```bash
 npm start              # server on http://localhost:3000 (serves web/dist + /api), env from .env
 npm run build          # build the React UI into web/dist (needed after any web/ change)
-npm run dev            # Vite dev server with /api proxied to :3000 (start the server too)
+npm run dev            # server (restarts on code changes) + Vite on :5173, both at once (dev:demo: sample data)
 node ledger.js         # self-check for the merge / rules / recurrings / schedules logic
 npm run check          # offline check of the Plaid <-> Copilot merge on the real DB (no Plaid calls)
 npm run import:copilot # re-import copilot-export/copilot-transactions.csv (see warning below)
