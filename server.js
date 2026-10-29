@@ -90,7 +90,7 @@ db.exec("CREATE TABLE IF NOT EXISTS closed_exports (name TEXT NOT NULL, mask TEX
 db.exec('CREATE TABLE IF NOT EXISTS splits (parent_id TEXT, idx INTEGER, name TEXT, amount REAL NOT NULL, PRIMARY KEY (parent_id, idx))');
 // Alerts the user dismissed or was already notified about, by alert id.
 db.exec('CREATE TABLE IF NOT EXISTS alert_state (id TEXT PRIMARY KEY, notified_at TEXT, dismissed_at TEXT)');
-// Touch ID passkeys (WebAuthn). Once one exists, every /api call needs an unlocked session.
+// Passkeys (WebAuthn). Once one exists, every /api call needs an unlocked session.
 db.exec('CREATE TABLE IF NOT EXISTS passkeys (id TEXT PRIMARY KEY, public_key TEXT NOT NULL, alg INTEGER NOT NULL, counter INTEGER NOT NULL DEFAULT 0, created_at TEXT)');
 // Credit card statement details from Plaid Liabilities (Amex, Robinhood card; Ally doesn't offer it).
 db.exec(`CREATE TABLE IF NOT EXISTS card_details (account_id TEXT PRIMARY KEY, due_date TEXT, minimum REAL, statement_balance REAL,
@@ -707,7 +707,7 @@ if (smoke) {
     res.end(JSON.stringify(data));
   };
 
-  // Touch ID lock. Passkeys are bound to the site "localhost", so the app must be opened at http://localhost:PORT.
+  // Passkey lock. Passkeys are bound to the site "localhost", so the app must be opened at http://localhost:PORT.
   // Sessions live in memory: a server restart locks the app. 15 idle minutes lock it too (the page also locks itself
   // after a minute in the background).
   const RP_ID = 'localhost';
@@ -719,7 +719,7 @@ if (smoke) {
   const takeChallenge = (type) => {
     const p = pending;
     pending = null;
-    if (!p || p.type !== type || p.expires < Date.now()) throw new Error('the Touch ID request expired, try again');
+    if (!p || p.type !== type || p.expires < Date.now()) throw new Error('the passkey request expired, try again');
     return p.challenge;
   };
   const hasPasskey = () => !!db.prepare('SELECT 1 FROM passkeys LIMIT 1').get();
@@ -758,7 +758,8 @@ if (smoke) {
         challenge: newChallenge('webauthn.create'), rp: { name: 'Moneta', id: RP_ID },
         user: { id: b64url(Buffer.from('ledger-owner')), name: 'Moneta', displayName: 'Moneta' },
         pubKeyCredParams: ALGS.map((alg) => ({ type: 'public-key', alg })), excludeCredentials: passkeyIds(),
-        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+        // Any passkey (this computer, a phone, a password manager, a security key), always with fingerprint/face/PIN.
+        authenticatorSelection: { userVerification: 'required', residentKey: 'preferred' },
         attestation: 'none', timeout: 120_000,
       };
     },

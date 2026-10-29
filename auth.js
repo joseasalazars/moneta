@@ -1,6 +1,6 @@
-// Touch ID unlock through WebAuthn passkeys on localhost, with no dependencies. The browser runs the biometric check;
+// Passkey unlock (WebAuthn) on localhost, with no dependencies. The browser or phone runs the fingerprint/face/PIN check;
 // the server only verifies that the response is signed by the key registered once, for this exact challenge, origin
-// and site, with Touch ID (user verification) actually performed. Self-check: node auth.js
+// and site, with user verification (fingerprint, face or PIN) actually performed. Self-check: node auth.js
 import { createHash, generateKeyPairSync, randomBytes, sign, verify } from 'node:crypto';
 
 export const b64url = (buf) => Buffer.from(buf).toString('base64url');
@@ -16,7 +16,7 @@ export function checkCeremony({ clientDataJSON, authenticatorData, type, challen
   const auth = Buffer.from(authenticatorData, 'base64url');
   if (auth.length < 37 || !auth.subarray(0, 32).equals(sha256(rpId))) throw new Error('wrong relying party');
   const flags = auth[32];
-  if (!(flags & 0x01) || !(flags & 0x04)) throw new Error('Touch ID (user verification) is required');
+  if (!(flags & 0x01) || !(flags & 0x04)) throw new Error('the passkey must verify you (fingerprint, face or PIN)');
   return auth.readUInt32BE(33);
 }
 
@@ -46,6 +46,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   bad({ type: 'webauthn.create' }, /type/);
   bad({ origins: ['http://evil.test'] }, /origin/);
   bad({ rpId: 'evil.test' }, /relying party/);
-  bad({ authenticatorData: authData(0x01) }, /Touch ID/); // presence without verification
+  bad({ authenticatorData: authData(0x01) }, /verify you/); // presence without verification
   console.log('auth self-check ok');
 }

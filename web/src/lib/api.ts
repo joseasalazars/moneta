@@ -124,7 +124,7 @@ export async function api<T>(path: string, body?: unknown): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  // Locked (Touch ID session expired or the server restarted): the lock screen takes over.
+  // Locked (passkey session expired or the server restarted): the lock screen takes over.
   if (res.status === 401) dispatchEvent(new Event('ledger:locked'))
   const data = await res.json()
   if (!res.ok) throw new Error(data.error)

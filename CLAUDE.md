@@ -21,7 +21,7 @@ npm run import:copilot # re-import copilot-export/copilot-transactions.csv (see 
 npm run demo           # no Plaid keys: ledger-demo.db filled by demo.js with 14 months of made-up data
 ```
 
-`README.md` is the public introduction (screenshots in `docs/screenshots/`, taken from the demo). Touch ID is optional
+`README.md` is the public introduction (screenshots in `docs/screenshots/`, taken from the demo). The passkey lock is optional
 ("Not now" on the setup screen; the lock button offers it again) and the demo never asks.
 
 `.env` holds `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV` (`sandbox` or `production`). Never read, print or commit it.
@@ -38,7 +38,7 @@ npm run demo           # no Plaid keys: ledger-demo.db filled by demo.js with 14
   `web/src/lib/data.tsx` (`useData`). API types are in `web/src/lib/api.ts`. Category emoji and group colors are in
   `web/src/lib/categories.ts`.
 - `connect.html`: a bare Plaid Link page at `/connect`, kept as a fallback for linking banks.
-- `auth.js`: WebAuthn (Touch ID) checks for the lock, no dependencies.
+- `auth.js`: WebAuthn (passkey) checks for the lock, no dependencies.
 - `check-merge.js`: an offline merge report and double-count assertion.
 - `ledger-<env>.db`: SQLite, one file per Plaid environment. `copilot-export/`: Copilot CSV and JSON exports.
   Both are gitignored, along with `.env`.
@@ -134,7 +134,8 @@ npm run demo           # no Plaid keys: ledger-demo.db filled by demo.js with 14
 - **Security:** bind 127.0.0.1, check the Host header (DNS rebinding), and require `application/json` on every
   POST (CSRF). Render bank strings as text only. Access tokens sit in plain text in the gitignored DB, so keep disk
   encryption (FileVault) on. API responses are `no-store`; pages send `X-Frame-Options: DENY`, `frame-ancestors 'none'`, no referrer.
-- **Touch ID lock** (`auth.js`, self-check `node auth.js`): a WebAuthn passkey bound to `localhost`. Once one is in
+- **Passkey lock** (`auth.js`, self-check `node auth.js`): a WebAuthn passkey bound to `localhost` (any authenticator:
+  Touch ID, Windows Hello, a phone, a password manager or a security key; user verification is always required). Once one is in
   `passkeys`, every `/api/*` except `/api/auth/*` needs the `ledger_session` cookie (HttpOnly, SameSite=Strict).
   Sessions are in memory: restart = locked; 15 idle minutes on the server = locked. The page locks itself by wall
   clock (timers pause in the background and in sleep): 5 minutes without input, a >30 s gap between its 5 s checks
@@ -145,7 +146,7 @@ npm run demo           # no Plaid keys: ledger-demo.db filled by demo.js with 14
   To look at the UI headless: `$B header "Authorization:Bearer $(cat .api-token)"` then `$B goto http://localhost:3000/#goals`
   (the gstack browse binary); the page counts as unlocked. The header goes to every site that browser visits, so
   run `$B stop` before browsing anything outside localhost.
-  **Locked out** (new Mac, Touch ID reset): `sqlite3 ledger-production.db 'DELETE FROM passkeys'`, restart, set up
+  **Locked out** (new computer, passkey deleted): `sqlite3 ledger-production.db 'DELETE FROM passkeys'`, restart, set up
   again. Mac notifications carry no amounts or merchants (they can show on the lock screen).
 - **Settings** (`settings` table, JSON per key; `GET/POST /api/settings`, page `#settings`): `idle_cash` = { name, apy }
   for the idle-cash health check; `categories` = { name: [emoji, group] } for custom categories and overrides of the

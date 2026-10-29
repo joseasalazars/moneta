@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { FingerprintIcon, LockIcon } from 'lucide-react'
+import { KeyRoundIcon, LockIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -18,13 +18,13 @@ async function post<T>(path: string, body: unknown = {}): Promise<T> {
   return data
 }
 
-// manual = the lock button. Auto-locks (idle, sleep) do nothing until Touch ID is set up; the button offers setup.
+// manual = the lock button. Auto-locks (idle, sleep) do nothing until a passkey is set up; the button offers setup.
 export async function lockNow(manual = false) {
   await post('/api/auth/lock').catch(() => {})
   dispatchEvent(new CustomEvent('ledger:locked', { detail: { manual } }))
 }
 
-// Touch ID passkey (WebAuthn). The server checks the signature and hands out a session cookie it requires on every
+// Passkey (WebAuthn): Touch ID, Windows Hello, a phone or a security key. The server checks the signature and hands out a session cookie it requires on every
 // /api call, so this is a real lock, not a cover over the page. While locked the app isn't even mounted.
 async function register() {
   // The server's options, with the binary fields as base64url strings.
@@ -59,7 +59,7 @@ export function LockGate({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = useState(false)
   const [blurred, setBlurred] = useState(false)
 
-  // Touch ID is optional: "Not now" is remembered per browser (the lock button offers setup again), and the demo
+  // The passkey is optional: "Not now" is remembered per browser (the lock button offers setup again), and the demo
   // never asks. Without a passkey the server doesn't lock the API either.
   const skipped = () => { try { return localStorage.getItem(SKIP_KEY) === '1' } catch { return false } }
   const check = useCallback(async () => {
@@ -68,7 +68,7 @@ export function LockGate({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    // Passkeys belong to the site "localhost"; at 127.0.0.1 Touch ID could never unlock.
+    // Passkeys belong to the site "localhost"; at 127.0.0.1 a passkey could never unlock.
     if (location.hostname === '127.0.0.1') return location.replace(location.href.replace('127.0.0.1', 'localhost'))
     check().catch((e: Error) => setError(e.message))
     // The lock button with no passkey yet means "set one up now".
@@ -124,9 +124,9 @@ export function LockGate({ children }: { children: React.ReactNode }) {
       await action()
       setState('open')
     } catch (e) {
-      // Cancelling the Touch ID sheet is not an error worth shouting about.
+      // Cancelling the passkey prompt is not an error worth shouting about.
       const err = e as Error
-      setError(err.name === 'NotAllowedError' ? 'Touch ID was cancelled or timed out. Try again.' : err.message)
+      setError(err.name === 'NotAllowedError' ? 'The passkey request was cancelled or timed out. Try again.' : err.message)
     } finally {
       setBusy(false)
     }
@@ -148,19 +148,19 @@ export function LockGate({ children }: { children: React.ReactNode }) {
       <Card className="w-full max-w-sm">
         <CardHeader className="justify-items-center text-center">
           <div className="bg-muted mb-2 grid size-12 place-items-center rounded-full">
-            {setup ? <FingerprintIcon className="size-6" aria-hidden /> : <LockIcon className="size-6" aria-hidden />}
+            {setup ? <KeyRoundIcon className="size-6" aria-hidden /> : <LockIcon className="size-6" aria-hidden />}
           </div>
-          <CardTitle>{setup ? 'Protect Moneta with Touch ID' : 'Moneta is locked'}</CardTitle>
+          <CardTitle>{setup ? 'Protect Moneta with a passkey' : 'Moneta is locked'}</CardTitle>
           <CardDescription>
             {setup
-              ? 'Your finances stay hidden until you unlock with your fingerprint. It locks again after 5 idle minutes, when the Mac sleeps, after a minute hidden, and on restart.'
-              : 'Unlock with your fingerprint to see your finances.'}
+              ? 'Your finances stay hidden until you unlock with a passkey: Touch ID, Windows Hello, your phone or a security key. It locks again after 5 idle minutes, when the computer sleeps, after a minute hidden, and on restart.'
+              : 'Unlock with your passkey to see your finances.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
           {state !== 'checking' && (
             <Button autoFocus disabled={busy} onClick={() => run(setup ? register : unlock)}>
-              <FingerprintIcon /> {busy ? 'Waiting for Touch ID…' : setup ? 'Set up Touch ID' : 'Unlock with Touch ID'}
+              <KeyRoundIcon /> {busy ? 'Waiting for your passkey…' : setup ? 'Create a passkey' : 'Unlock with passkey'}
             </Button>
           )}
           {setup && (

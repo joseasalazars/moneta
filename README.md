@@ -21,7 +21,7 @@ nowhere else: no account, no cloud, no tracking. Think Copilot Money or Monarch,
   movers, and a side panel per position with its price chart from one day to all time.
 - **Reviews that tell you something.** A weekly recap, a monthly report, financial health checks with actions, and
   alerts for overspending, unusual charges, price changes, missed bills and card due dates.
-- **Private by default.** Optional Touch ID lock, a blur whenever the window loses focus, an eye button that hides
+- **Private by default.** Optional passkey lock (Touch ID, Windows Hello, your phone or a security key), a blur whenever the window loses focus, an eye button that hides
   every amount, light and dark themes.
 
 | | |
@@ -52,7 +52,7 @@ click through everything. Delete that file to start the demo over.
 3. **Run.** `npm start`, open http://localhost:3000 (use `localhost`, not `127.0.0.1`), and click **Connect account**.
    With sandbox keys, pick any test bank and sign in with `user_good` / `pass_good`.
 4. **Make it yours.** Set budgets on the Categories page, goals on Goals, and rules from any transaction or on the
-   Review page. Settings holds your categories, tags and where idle cash should go. Turn on Touch ID when it asks.
+   Review page. Settings holds your categories, tags and where idle cash should go. Create a passkey when it asks.
 
 Plaid checks each bank a few times a day; **Sync** pulls whatever it has. Accounts show when Plaid last reached the bank.
 
@@ -67,8 +67,8 @@ is matched one to one so nothing is counted twice. (`npm run check` prints the m
 
 - The server listens on `127.0.0.1` only and checks the `Host` header, so other machines and other websites can't reach
   it. Every write needs `Content-Type: application/json`.
-- With Touch ID set up, every API call needs a session from a WebAuthn passkey; the page locks after 5 idle minutes,
-  when the Mac sleeps, and after a minute in the background. Without Touch ID, anything running on your computer can
+- With a passkey set up, every API call needs a session from it (WebAuthn, with fingerprint, face or PIN); the page locks after 5 idle minutes,
+  when the computer sleeps, and after a minute in the background. Without a passkey, anything running on your computer can
   read the API, so turn it on if others use the machine.
 - Plaid access tokens live in the SQLite file next to your data. Keep disk encryption (FileVault) on. The server makes
   the database readable by your user only; do the same for your keys with `chmod 600 .env`.
@@ -79,7 +79,7 @@ is matched one to one so nothing is counted twice. (`npm run check` prints the m
 npm start                   # API + built UI on :3000 (reads .env)
 npm run dev                 # Vite dev server on :5173, /api proxied to :3000
 node ledger.js              # self-check of the merge, rules, recurrings, alerts and health logic
-node auth.js                # self-check of the Touch ID (WebAuthn) verification
+node auth.js                # self-check of the passkey (WebAuthn) verification
 ```
 
 - `server.js` is a dependency-free Node HTTP server: Plaid calls, SQLite schema and migrations, every `/api/*` route.
