@@ -75,9 +75,12 @@ is matched one to one so nothing is counted twice. (`npm run check` prints the m
 
 ## Development
 
+To work on the UI with live reload, run two terminals: the server (`npm start`, or `npm run demo`) and `npm run dev`,
+then open http://localhost:5173. `npm run dev` alone serves only the page, with no server behind it.
+
 ```bash
 npm start                   # API + built UI on :3000 (reads .env)
-npm run dev                 # Vite dev server on :5173, /api proxied to :3000
+npm run dev                 # Vite dev server on :5173, /api proxied to :3000 (start the server too)
 node ledger.js              # self-check of the merge, rules, recurrings, alerts and health logic
 node auth.js                # self-check of the passkey (WebAuthn) verification
 ```

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { KeyRoundIcon, LockIcon } from 'lucide-react'
+import { KeyRoundIcon, LockIcon, ServerOffIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-type State = 'checking' | 'setup' | 'locked' | 'open'
+type State = 'checking' | 'offline' | 'setup' | 'locked' | 'open'
 const SKIP_KEY = 'ledger:touch-id-skipped'
 const HIDDEN_LOCK_MS = 60_000 // hidden (another tab, minimized) longer than this → locked
 const IDLE_LOCK_MS = 5 * 60_000 // no mouse or keyboard this long → locked
@@ -62,15 +62,19 @@ export function LockGate({ children }: { children: React.ReactNode }) {
   // The passkey is optional: "Not now" is remembered per browser (the lock button offers setup again), and the demo
   // never asks. Without a passkey the server doesn't lock the API either.
   const skipped = () => { try { return localStorage.getItem(SKIP_KEY) === '1' } catch { return false } }
+  // No answer (or not JSON) means the server isn't running, e.g. `npm run dev` started alone: say so plainly.
   const check = useCallback(async () => {
-    const s = await (await fetch('/api/auth/status')).json()
+    setError('')
+    const res = await fetch('/api/auth/status').catch(() => null)
+    const s = res?.ok ? await res.json().catch(() => null) : null
+    if (!s) return setState('offline')
     setState(s.demo ? 'open' : !s.registered ? (skipped() ? 'open' : 'setup') : s.unlocked ? 'open' : 'locked')
   }, [])
 
   useEffect(() => {
     // Passkeys belong to the site "localhost"; at 127.0.0.1 a passkey could never unlock.
     if (location.hostname === '127.0.0.1') return location.replace(location.href.replace('127.0.0.1', 'localhost'))
-    check().catch((e: Error) => setError(e.message))
+    check()
     // The lock button with no passkey yet means "set one up now".
     const onLocked = (e: Event) => fetch('/api/auth/status').then((r) => r.json()).then((s) => {
       if (s.demo) return
@@ -78,7 +82,7 @@ export function LockGate({ children }: { children: React.ReactNode }) {
       if (!(e as CustomEvent).detail?.manual) return
       try { localStorage.removeItem(SKIP_KEY) } catch { /* ignore */ }
       setState('setup')
-    })
+    }).catch(() => setState('offline')) // the server stopped
     addEventListener('ledger:locked', onLocked)
     return () => removeEventListener('ledger:locked', onLocked)
   }, [check])
@@ -142,6 +146,26 @@ export function LockGate({ children }: { children: React.ReactNode }) {
     )
   }
 
+  if (state === 'checking') return <div className="bg-background min-h-svh" />
+  if (state === 'offline') {
+    return (
+      <div className="bg-background grid min-h-svh place-items-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="justify-items-center text-center">
+            <div className="bg-muted mb-2 grid size-12 place-items-center rounded-full"><ServerOffIcon className="size-6" aria-hidden /></div>
+            <CardTitle>Can't reach the Moneta server</CardTitle>
+            <CardDescription>
+              This page is up, but the server behind it isn't running. In the moneta folder, run <code>npm start</code> (or{' '}
+              <code>npm run demo</code> to try it with sample data), then try again. Working on the code with <code>npm run dev</code>?
+              Keep one of those running in another terminal too.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid"><Button autoFocus onClick={() => check()}>Try again</Button></CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const setup = state === 'setup'
   return (
     <div className="bg-background grid min-h-svh place-items-center p-4">
@@ -158,11 +182,9 @@ export function LockGate({ children }: { children: React.ReactNode }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
-          {state !== 'checking' && (
-            <Button autoFocus disabled={busy} onClick={() => run(setup ? register : unlock)}>
-              <KeyRoundIcon /> {busy ? 'Waiting for your passkey…' : setup ? 'Create a passkey' : 'Unlock with passkey'}
-            </Button>
-          )}
+          <Button autoFocus disabled={busy} onClick={() => run(setup ? register : unlock)}>
+            <KeyRoundIcon /> {busy ? 'Waiting for your passkey…' : setup ? 'Create a passkey' : 'Unlock with passkey'}
+          </Button>
           {setup && (
             <Button variant="ghost" onClick={() => { try { localStorage.setItem(SKIP_KEY, '1') } catch { /* this session only */ } setState('open') }}>
               Not now
