@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Moneta</title>
+  <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+  <style>
+    body { font: 14px system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 2rem; }
+    th, td { padding: .35rem .5rem; border-bottom: 1px solid #ddd; text-align: left; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    #status { margin-left: .5rem; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Moneta</h1>
+  <button id="connect">Connect account</button>
+  <button id="sync">Sync</button>
+  <span id="status"></span>
+  <h2>Accounts</h2>
+  <table id="accounts"></table>
+  <h2>Recent transactions</h2>
+  <table id="transactions"></table>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const status = (msg) => { $('#status').textContent = msg; };
+    const money = (n) => n == null ? '' : n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+    async function api(path, body) {
+      const opts = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+      const res = await fetch(path, opts);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      return data;
+    }
+
+    // Bank-supplied strings go in via textContent only, never innerHTML.
+    function table(el, cols, rows) {
+      el.replaceChildren();
+      const head = el.insertRow();
+      for (const [label, , cls] of cols) head.appendChild(Object.assign(document.createElement('th'), { textContent: label, className: cls ?? '' }));
+      for (const row of rows) {
+        const tr = el.insertRow();
+        for (const [, value, cls] of cols) Object.assign(tr.insertCell(), { textContent: value(row) ?? '', className: cls ?? '' });
+      }
+    }
+
+    async function render() {
+      table($('#accounts'), [
+        ['Institution', (a) => a.institution],
+        ['Account', (a) => a.name],
+        ['Mask', (a) => a.mask],
+        ['Type', (a) => a.subtype ?? a.type],
+        ['Balance', (a) => money(a.balance), 'num'],
+      ], await api('/api/accounts'));
+      table($('#transactions'), [
+        ['Date', (t) => t.date],
+        ['Name', (t) => t.merchant ?? t.name],
+        ['Category', (t) => t.category],
+        ['Account', (t) => t.account],
+        ['Amount', (t) => money(t.amount), 'num'],
+      ], await api('/api/transactions'));
+    }
+
+    async function sync() {
+      status('Syncing…');
+      const results = await api('/api/sync', {});
+      // Right after linking, Plaid may report NOT_READY with 0 transactions; Sync again in a few seconds.
+      status(results.map((r) => `${r.institution}: +${r.added} (${r.status})`).join(' · ') || 'No accounts linked yet');
+      await render();
+    }
+
+    const run = (fn) => () => fn().catch((e) => status(`Error: ${e.message}`));
+
+    $('#sync').onclick = run(sync);
+    $('#connect').onclick = run(async () => {
+      const { link_token } = await api('/api/link_token', {});
+      Plaid.create({
+        token: link_token,
+        onSuccess: (public_token, meta) => run(async () => {
+          await api('/api/exchange', { public_token, institution: meta.institution?.name });
+          await sync();
+        })(),
+        // Closing Link before it finishes means nothing gets saved here, even if the bank login succeeded.
+        onExit: (err) => status(err ? `Link error: ${err.error_code} ${err.display_message ?? err.error_message ?? ''}` : 'Link closed, nothing saved'),
+      }).open();
+    });
+
+    run(render)();
+  </script>
+</body>
+</html>

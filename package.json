@@ -1,0 +1,14 @@
+{
+  "name": "moneta",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env server.js",
+    "build": "npm --prefix web run build",
+    "dev": "npm --prefix web run dev",
+    "smoke": "node --env-file=.env server.js smoke",
+    "check": "node check-merge.js",
+    "import:copilot": "sqlite3 ledger-production.db < import-copilot.sql",
+    "demo": "PLAID_ENV=demo node server.js"
+  }
+}

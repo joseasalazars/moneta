@@ -1,0 +1,10 @@
+.env
+*.db
+node_modules/
+copilot-export/
+web/dist/
+.gstack/
+*.db-*
+.DS_Store
+.api-token*
+.private-terms
